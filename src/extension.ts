@@ -1,50 +1,39 @@
 'use strict';
 
-import { ExtensionContext, StatusBarAlignment, window, StatusBarItem, Selection, workspace, TextEditor, commands } from 'vscode';
+import { ExtensionContext, window, workspace, commands } from 'vscode';
 
 export function activate(context: ExtensionContext) {
-    const status = window.createStatusBarItem(StatusBarAlignment.Right, 100);
-    status.command = 'extension.selectedLines';
-    context.subscriptions.push(status);
 
-    context.subscriptions.push(window.onDidChangeActiveTextEditor(e => updateStatus(status)));
-    context.subscriptions.push(window.onDidChangeTextEditorSelection(e => updateStatus(status)));
-    context.subscriptions.push(window.onDidChangeTextEditorViewColumn(e => updateStatus(status)));
-    context.subscriptions.push(workspace.onDidOpenTextDocument(e => updateStatus(status)));
-    context.subscriptions.push(workspace.onDidCloseTextDocument(e => updateStatus(status)));
+    context.subscriptions.push(workspace.onDidOpenTextDocument(e => updateFileName()));
 
-    context.subscriptions.push(commands.registerCommand('extension.selectedLines', () => {
-        window.showInformationMessage(getSelectedLines());
+    context.subscriptions.push(commands.registerCommand('extension.nice-index-vscode', () => {
+        window.showInformationMessage(getFileName());
     }));
 
-    updateStatus(status);
+    updateFileName()
 }
 
-function updateStatus(status: StatusBarItem): void {
-    let text = getSelectedLines();
+function updateFileName(): void {
+    const editor = window.activeTextEditor.document;
+    let text = getFileName();
     if (text) {
-        status.text = '$(megaphone) ' + text;
-    }
-
-    if (text) {
-        status.show();
-    } else {
-        status.hide();
+        console.log(text)
     }
 }
 
-function getSelectedLines(): string {
-    const editor = window.activeTextEditor;
+function getFileName(): string {
+    const editor = window.activeTextEditor.document;
+    let currentFileName: string;
     let text: string;
+    let path: Array<string>;
 
     if (editor) {
-        let lines = 0;
-        editor.selections.forEach(selection => {
-            lines += (selection.end.line - selection.start.line + 1);
-        });
-
-        if (lines > 0) {
-            text = `${lines} line(s) selected`;
+        if (editor.uri.path) {
+            path = editor.uri.path.split('/');
+            currentFileName = path[path.length - 1]
+            if (currentFileName === 'index.js') {
+                text = path[path.length - 2]
+            }
         }
     }
 

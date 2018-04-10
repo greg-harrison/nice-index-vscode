@@ -2,42 +2,32 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 var vscode_1 = require("vscode");
 function activate(context) {
-    var status = vscode_1.window.createStatusBarItem(vscode_1.StatusBarAlignment.Right, 100);
-    status.command = 'extension.selectedLines';
-    context.subscriptions.push(status);
-    context.subscriptions.push(vscode_1.window.onDidChangeActiveTextEditor(function (e) { return updateStatus(status); }));
-    context.subscriptions.push(vscode_1.window.onDidChangeTextEditorSelection(function (e) { return updateStatus(status); }));
-    context.subscriptions.push(vscode_1.window.onDidChangeTextEditorViewColumn(function (e) { return updateStatus(status); }));
-    context.subscriptions.push(vscode_1.workspace.onDidOpenTextDocument(function (e) { return updateStatus(status); }));
-    context.subscriptions.push(vscode_1.workspace.onDidCloseTextDocument(function (e) { return updateStatus(status); }));
-    context.subscriptions.push(vscode_1.commands.registerCommand('extension.selectedLines', function () {
-        vscode_1.window.showInformationMessage(getSelectedLines());
+    context.subscriptions.push(vscode_1.workspace.onDidOpenTextDocument(function (e) { return updateFileName(); }));
+    context.subscriptions.push(vscode_1.commands.registerCommand('extension.nice-index-vscode', function () {
+        vscode_1.window.showInformationMessage(getFileName());
     }));
-    updateStatus(status);
+    updateFileName();
 }
 exports.activate = activate;
-function updateStatus(status) {
-    var text = getSelectedLines();
+function updateFileName() {
+    var editor = vscode_1.window.activeTextEditor.document;
+    var text = getFileName();
     if (text) {
-        status.text = '$(megaphone) ' + text;
-    }
-    if (text) {
-        status.show();
-    }
-    else {
-        status.hide();
+        console.log(text);
     }
 }
-function getSelectedLines() {
-    var editor = vscode_1.window.activeTextEditor;
+function getFileName() {
+    var editor = vscode_1.window.activeTextEditor.document;
+    var currentFileName;
     var text;
+    var path;
     if (editor) {
-        var lines_1 = 0;
-        editor.selections.forEach(function (selection) {
-            lines_1 += (selection.end.line - selection.start.line + 1);
-        });
-        if (lines_1 > 0) {
-            text = lines_1 + " line(s) selected";
+        if (editor.uri.path) {
+            path = editor.uri.path.split('/');
+            currentFileName = path[path.length - 1];
+            if (currentFileName === 'index.js') {
+                text = path[path.length - 2];
+            }
         }
     }
     return text;
