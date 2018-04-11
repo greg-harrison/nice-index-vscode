@@ -2,21 +2,22 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 var vscode_1 = require("vscode");
 function activate(context) {
-    context.subscriptions.push(vscode_1.workspace.onDidOpenTextDocument(function (e) { return updateFileName(); }));
-    context.subscriptions.push(vscode_1.commands.registerCommand('extension.nice-index-vscode', function () {
-        vscode_1.window.showInformationMessage(getFileName());
-    }));
+    context.subscriptions.push(vscode_1.window.onDidChangeActiveTextEditor(function (e) { return updateFileName(); }));
     updateFileName();
 }
 exports.activate = activate;
 function updateFileName() {
     var editor = vscode_1.window.activeTextEditor.document;
-    var text = getFileName();
-    if (text) {
-        console.log(text);
+    var config = vscode_1.workspace.getConfiguration('workbench.editor');
+    console.log('hasIndex()', hasIndex());
+    if (hasIndex() && config.get('labelFormat') !== 'short') {
+        config.update('labelFormat', 'short');
+    }
+    else {
+        config.update('labelFormat', 'default');
     }
 }
-function getFileName() {
+function hasIndex() {
     var editor = vscode_1.window.activeTextEditor.document;
     var currentFileName;
     var text;
@@ -25,9 +26,8 @@ function getFileName() {
         if (editor.uri.path) {
             path = editor.uri.path.split('/');
             currentFileName = path[path.length - 1];
-            if (currentFileName === 'index.js') {
-                text = path[path.length - 2];
-            }
+            console.log('currentFileName', currentFileName);
+            text = (currentFileName === 'index.js');
         }
     }
     return text;
